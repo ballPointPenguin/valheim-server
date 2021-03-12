@@ -1,0 +1,42 @@
+---
+- name: valheim deploy
+  hosts: west
+  remote_user: hank
+
+  tasks:
+    # - name: ensure workdir parent dir is present
+    # - name: clone or update repo
+    # - name: copy env file to remote folder
+    - name: ensure valheim config volume
+      docker_container:
+        image: lloesche/valheim-server
+        name: "valheim-config"
+        state: stopped
+
+    - name: ensure valheim data volume
+      docker_container:
+        image: lloesche/valheim-server
+        name: "valheim-data"
+        state: stopped
+
+    - name: ensure backups volume
+      docker_container:
+        image: lloesche/valheim-server
+        name: "valheim-backups"
+        state: stopped
+
+    - name: run valheim container
+      docker_container:
+        image: lloesche/valheim-server
+        name: "valheim-server"
+        capabilities:
+         - sys_nice
+        stop_timeout: 120
+        published_ports:
+          - "2456-2457:2456-2457/udp"
+        volumes:
+          - valheim-config:/config
+          - valheim-data:/opt/valheim
+          - valheim-backups:/config/backups
+        env_file: ".env"
+        
